@@ -69,8 +69,8 @@ class Database extends Config
     public array $staging = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'admin_ifpi',
-        'password'     => '82H*kh2s3',
+        'username'     => 'admin_fpsbi_lms',
+        'password'     => '7pUm~Afa8&Gkpsz3',
         'database'     => 'fpsbi_lms',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
@@ -89,8 +89,8 @@ class Database extends Config
     public array $production = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'admin_ifpi',
-        'password'     => '82H*kh2s3',
+        'username'     => 'admin_fpsbi_lms',
+        'password'     => '7pUm~Afa8&Gkpsz3',
         'database'     => 'lms_fpsbi',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
