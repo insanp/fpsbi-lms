@@ -369,7 +369,7 @@ class CodeEthics extends \App\Controllers\BaseController
     $mcAnswersModel->insertBatchUpdateOnDuplicate($insertData);
 
     // notify admin that this user finishes the final assessment
-    //$this->sendEmailLatihanUjian();
+    $this->sendEmailLatihanUjian();
 
     return view('member/pages/code-of-ethics/final_assessment/submission', $data);
   }
