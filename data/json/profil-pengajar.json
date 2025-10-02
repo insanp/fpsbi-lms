@@ -1,0 +1,44 @@
+{
+    "data": [
+        {
+            "name": "Prof. Dr. Murniati Mukhlisin, CFP®, IFP®",
+            "image": "murniati.webp",
+            "desc": "Sakinah Finance Indonesia"
+        },
+        {
+            "name": "Anuar bin Shuib",
+            "image": "anuar.webp",
+            "desc": "Head of IFP® Chairman for Overseas Development Committee of Malaysian Financial Planning Council (MFPC)"
+        },
+        {
+            "name": "Mohd Zahidi Ahmad",
+            "image": "zahidi.webp",
+            "desc": "Principal/Consultant Trainer, Emzek Associates"
+        },
+        {
+            "name": "Dr. Hj Shahizan Hj Md Noh CA(M), IFP®, CQIF (WM), AWP Syariah",
+            "image": "shahizan.webp",
+            "desc": "Specialist, Islamic Financial Planning & Wealth Management"
+        },
+        {
+            "name": "M Ichsan, CFP®, ChFC®, IFP®",
+            "image": "ichsan.webp",
+            "desc": "CEO of FPSB Indonesia"
+        },
+        {
+            "name": "Yuki Diwinoto MM., CPA, CFP®, IFP®",
+            "image": "yuki.webp",
+            "desc": "Tax Advisor FPSB Indonesia"
+        },
+        {
+            "name": "Reni K. Ashuri, CFP®, IFP®, AEPP",
+            "image": "reni.webp",
+            "desc": "Head of Sharia Financial Planning FPSB Indonesia"
+        },
+        {
+            "name": "Dr. Bambang Tutuko CFP®, IFP®",
+            "image": "bambang.webp",
+            "desc": "Lecturer Universitas Internasional Semen Indonesia (UISI)"
+        }
+    ]
+}
