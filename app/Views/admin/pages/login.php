@@ -12,7 +12,7 @@
                     <!-- Nested Row within Card Body -->
                     <div class="row">
                         <div class="col-lg-6 d-none d-lg-block login-logo">
-                            <img src="<?= base_url('assets/images/logo_fpsb.webp') ?>" width="200px" />
+                            <img src="<?= base_url('assets/images/logo_fpsb_indonesia.webp') ?>" width="50%" />
                         </div>
                         <div class="col-lg-6">
                             <div class="p-5">
