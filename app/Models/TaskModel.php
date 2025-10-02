@@ -9,7 +9,15 @@ class TaskModel extends Model
     protected $table = 'tasks';
     protected $primaryKey = 'id';
 
-    protected $allowedFields = ['topic_id', 'name', 'starting_statement', 'finishing_statement', 'type', 'created_at', 'updated_at'];
+    protected $allowedFields = ['topic_id', 'name', 'starting_statement', 'finishing_statement', 'type', 'max_attempts', 'created_at', 'updated_at'];
+    /**
+     * Get max_attempts for a given task id
+     */
+    public function getMaxAttempts($taskId)
+    {
+        $task = $this->find($taskId);
+        return isset($task['max_attempts']) ? (int)$task['max_attempts'] : 3;
+    }
 
     protected $useTimestamps = true;
     protected $createdField = 'created_at';

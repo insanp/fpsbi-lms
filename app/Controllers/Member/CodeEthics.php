@@ -163,41 +163,53 @@ class CodeEthics extends \App\Controllers\BaseController
     }
 
     $userId = $this->sessionData['id'];
-
-    // Load the necessary models
     $taskModel = new TaskModel();
     $taskAttemptsModel = new TaskAttemptModel();
+    $progressModel = new \App\Models\ProgressModel();
+    // Check if progress for this topic is already completed
+    $progress = $progressModel->where('user_id', $userId)->where('topic_id', $topicId)->where('completed_at IS NOT NULL')->first();
+    if ($progress) {
+      return redirect()->to('/member/code-of-ethics/final-assessment/result')->with('error', 'Anda sudah menyelesaikan Assessment.');
+    }
 
-    // Step 1: Retrieve all task IDs associated with the given topic ID
     $tasks = $taskModel->where('topic_id', $topicId)->findAll();
-
     if (empty($tasks)) {
       return redirect()->back()->with('error', 'No tasks found for the specified topic.');
     }
-
-    // Step 2: Insert each task ID into task_attempts if not already present
-    $timestamp = date('Y-m-d H:i:s');
-
+    // Only allow if attempts < max_attempts, and only create a new attempt if no incomplete attempt exists
     foreach ($tasks as $task) {
-      $data = [
-        'user_id'    => $userId,
-        'task_id'    => $task['id'],
-        'created_at' => $timestamp
-      ];
-
-      // Attempt to insert if not exists; if it exists, insertIfNotExists will just skip it
-      $taskAttemptsModel->insertIfNotExists($userId, $task['id'], $data);
+      $maxAttempts = $taskModel->getMaxAttempts($task['id']);
+      $attemptCount = $taskAttemptsModel->where('user_id', $userId)->where('task_id', $task['id'])->countAllResults();
+      if ($attemptCount > $maxAttempts) {
+        return redirect()->to('/member/code-of-ethics/final-assessment/result')->with('error', 'Anda telah mencapai batas maksimal percobaan assessment.');
+      }
+      // Check for existing incomplete attempt
+      $incompleteAttempt = $taskAttemptsModel->where('user_id', $userId)
+        ->where('task_id', $task['id'])
+        ->where('completed_at IS NULL')
+        ->orderBy('created_at', 'DESC')
+        ->first();
+      if (!$incompleteAttempt) {
+        // Only insert if no incomplete attempt exists
+        $timestamp = date('Y-m-d H:i:s');
+        $data = [
+          'user_id'    => $userId,
+          'task_id'    => $task['id'],
+          'created_at' => $timestamp
+        ];
+        $taskAttemptsModel->insert($data);
+      }
     }
-
-    return redirect()->to('/member/code-of-ethics/final-assessment/show')->with('success', 'Task attempts have been initialized as needed.');
+    return redirect()->to('/member/code-of-ethics/final-assessment/show')->with('success', 'Percobaan assessment telah dimulai.');
   }
+
   public function showFA()
   {
     $courseExamModel = new \App\Models\CourseExamModel();
     $isCompleted = $courseExamModel->isExamTopicCompleted($this->courseId);
 
     if ($isCompleted) {
-      return redirect()->to('/member/code-of-ethics/final-assessment/result')->with('error', 'Anda sudah menyelesaikan latihan ujian.');
+      return redirect()->to('/member/code-of-ethics/final-assessment/result')->with('error', 'Anda sudah menyelesaikan Assessment.');
     }
 
     $data = array();
@@ -223,6 +235,24 @@ class CodeEthics extends \App\Controllers\BaseController
         $this->cache->save($cacheKey, $examMcQuestionsData, 60);
       }
       $data['part1Data'] = $examMcQuestionsData;
+
+      $currentAttempt = 0;
+      $currentAttemptCreatedAt = null;
+
+      $taskId = $examMcQuestionsData['task']['id'];
+      $userId = $this->sessionData['id'];
+      $currentAttempt = $taskAttemptsModel->where('user_id', $userId)->where('task_id', $taskId)->countAllResults();
+      // Get the latest incomplete attempt, or latest completed if none incomplete
+      $latestAttempt = $taskAttemptsModel->where('user_id', $userId)
+        ->where('task_id', $taskId)
+        ->orderBy('created_at', 'DESC')
+        ->first();
+      if ($latestAttempt) {
+        $currentAttemptCreatedAt = $latestAttempt['created_at'];
+      }
+
+      $data['current_attempt'] = $currentAttempt;
+      $data['current_attempt_created_at'] = $currentAttemptCreatedAt;
 
       $data['fa_secret_key'] = $secretKey;
 
@@ -295,9 +325,32 @@ class CodeEthics extends \App\Controllers\BaseController
       'results' => $results
     );
 
-    // complete task attempt for multiple choice
-    $taskAttempt = new TaskAttemptModel();
-    $taskAttemptId = $taskAttempt->markAsCompleted($this->sessionData['id'], $requestData['part1_taskid'], $part1Score);
+    // Use the latest incomplete attempt for this user and task
+    $taskAttemptModel = new TaskAttemptModel();
+    $taskId = $requestData['part1_taskid'];
+    $userId = $this->sessionData['id'];
+    $timestamp = date('Y-m-d H:i:s');
+    $latestAttempt = $taskAttemptModel->where('user_id', $userId)
+      ->where('task_id', $taskId)
+      ->where('completed_at IS NULL')
+      ->orderBy('created_at', 'DESC')
+      ->first();
+    if ($latestAttempt) {
+      // Update score for this attempt
+      $taskAttemptId = $latestAttempt['id'];
+      $taskAttemptModel->update($taskAttemptId, ['score' => $part1Score]);
+    } else {
+      // Fallback: create a new attempt if none found (should not happen in normal flow)
+      $attemptData = [
+        'user_id' => $userId,
+        'task_id' => $taskId,
+        'created_at' => $timestamp,
+        'score' => $part1Score
+      ];
+      $taskAttemptId = $taskAttemptModel->insert($attemptData, true);
+    }
+    // Always mark as completed regardless of score
+    $taskAttemptModel->markAsCompletedByAttemptId($taskAttemptId, $part1Score);
 
     $insertData = [];
     $timestamp = date('Y-m-d H:i:s');
@@ -316,7 +369,7 @@ class CodeEthics extends \App\Controllers\BaseController
     $mcAnswersModel->insertBatchUpdateOnDuplicate($insertData);
 
     // notify admin that this user finishes the final assessment
-    $this->sendEmailLatihanUjian();
+    //$this->sendEmailLatihanUjian();
 
     return view('member/pages/code-of-ethics/final_assessment/submission', $data);
   }
@@ -332,14 +385,22 @@ class CodeEthics extends \App\Controllers\BaseController
     $taskAttemptModel = new TaskAttemptModel();
 
     $taskId = $taskModel->getTaskIdByCourse($this->courseId, 'exam_mc')[0]['id'];
-    $taskAttemptId = $taskAttemptModel->select('id')->where('task_id', $taskId)->first();
+    $userId = $this->sessionData['id'];
+    // Get all attempts for this user and task, latest first
+    $allAttempts = $taskAttemptModel->where('user_id', $userId)->where('task_id', $taskId)->orderBy('created_at', 'DESC')->findAll();
+    $latestAttempt = $allAttempts ? $allAttempts[0] : null;
+    $taskAttemptId = $latestAttempt ? $latestAttempt['id'] : null;
+    // Find the attempt number (1-based, latest = highest)
+    $attemptNumber = $allAttempts ? count($allAttempts) : 0;
+    $attemptCreatedAt = $latestAttempt ? $latestAttempt['created_at'] : null;
+    $attemptCompletedAt = $latestAttempt ? $latestAttempt['completed_at'] : null;
 
     // Fetch questions for the Part 1 exam
     $examMcQuestionsData = $taskModel->getExamMcTaskWithQuestionsByCourse($this->courseId);
     $questions = $examMcQuestionsData['questions'];
 
     // Fetch submitted answers from mc_answers table
-    $submittedAnswers = $mcAnswerModel->getAnswersByTaskAttemptId($taskAttemptId); // Method should return answers keyed by question_id
+    $submittedAnswers = $taskAttemptId ? $mcAnswerModel->getAnswersByTaskAttemptId($taskAttemptId) : [];
     $results = [];
 
     $part1Correct = 0;
@@ -349,21 +410,16 @@ class CodeEthics extends \App\Controllers\BaseController
       $part1TotalQuestions++;
       $question_id = $question['id'];
       $correct_option_id = null;
-
-      // Find the correct option id
       foreach ($question['options'] as $option) {
         if ($option['is_correct'] == 1) {
           $correct_option_id = $option['id'];
           break;
         }
       }
-
-      // Check if an answer was submitted for this question and whether it is correct
       if (isset($submittedAnswers[$question_id])) {
         $submitted_option_id = $submittedAnswers[$question_id];
         $is_correct = ($submitted_option_id == $correct_option_id);
         if ($is_correct) $part1Correct++;
-
         $results[$question_id] = [
           'submitted_option' => $submitted_option_id,
           'correct_option' => $correct_option_id,
@@ -371,7 +427,6 @@ class CodeEthics extends \App\Controllers\BaseController
           'status' => 'answered'
         ];
       } else {
-        // If no answer was submitted
         $results[$question_id] = [
           'submitted_option' => null,
           'correct_option' => $correct_option_id,
@@ -380,17 +435,26 @@ class CodeEthics extends \App\Controllers\BaseController
         ];
       }
     }
-
-    // Calculate Part 1 score
     $part1Score = $part1TotalQuestions > 0 ? 100.0 * $part1Correct / $part1TotalQuestions : 0;
+    // Get max attempts and current attempt count
+    $maxAttempts = $taskModel->getMaxAttempts($taskId);
+    $attemptCount = $taskAttemptModel->where('user_id', $userId)->where('task_id', $taskId)->countAllResults();
     $data['part1'] = [
       'score' => $part1Score,
       'correct_answers' => $part1Correct,
       'total_questions' => $part1TotalQuestions,
-      'results' => $results
+      'results' => $results,
+      'max_attempts' => $maxAttempts,
+      'attempt_count' => $attemptCount,
+      'attempt_number' => $attemptNumber,
+      'attempt_created_at' => $attemptCreatedAt,
+      'attempt_completed_at' => $attemptCompletedAt
     ];
     $data['part1Data'] = $examMcQuestionsData;
 
+    // refresh progress
+    $progressService = new ProgressService();
+    $progressService->checkAndUpdateProgress($this->sessionData, $data['part1Data']['task']['topic_id']);
     return view('member/pages/code-of-ethics/final_assessment/result', $data);
   }
 
@@ -422,12 +486,12 @@ class CodeEthics extends \App\Controllers\BaseController
       'member_id' => $this->sessionData['member_id'],
       'name' => $this->sessionData['name'],
       'email' => $this->sessionData['email'],
-      'program' => 'RFP Insurance'
+      'program' => 'Kode Etik dan Rules of Conduct'
     );
     $htmlReport = view('emails/user_finish', ['report' => $report]);;
 
     $email->setTo(array('insan.putranda@fpsbindonesia.net')); // Admin email
-    $email->setSubject('IFPI - User Finish RFP');
+    $email->setSubject('FPSB LMS - User Selesai Kode Etik dan Rules of Conduct');
     $email->setMessage($htmlReport); // HTML content
     $email->setMailType('html');
     $email->send();

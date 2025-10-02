@@ -5,7 +5,7 @@
     <div class="col-lg-10">
         <p>Assessment merupakan bagian terakhir yang merangkum keseluruhan pengetahuan Anda terhadap topik Kode Etik dan Rules of Conduct. Assessment dapat dilakukan kapan saja dan tidak memiliki batas waktu, namun harus diselesaikan sebelum tanggal akhir akses program pembelajaran Anda.</p>
         <p>Assessment terdiri atas 20 soal pilihan ganda. Ketika Anda memulai Assessment, waktu akan mulai dihitung sejak pertama kali dikerjakan dan tercatat untuk keperluan pribadi Anda. Meski tidak ada batasan waktu, estimasi waktu pengerjaan keseluruhan adalah sekitar 60 menit atau lebih cepat.</p>
-        <p>Berbeda dengan latihan kuis pada topik sebelumnya, Anda hanya memiliki maksimal tiga kali kesempatan untuk mengirimkan jawaban dalam Assessment. Setelah menyelesaikan seluruh soal, sistem akan memberikan umpan balik sebagai hasil dari pembelajaran.</p>
+        <p>Berbeda dengan latihan kuis pada topik sebelumnya, Anda hanya memiliki <strong>maksimal tiga kali kesempatan untuk mengerjakan Assessment (dua kali pengulangan)</strong>. Setelah menyelesaikan seluruh soal, sistem akan memberikan umpan balik sebagai hasil dari pembelajaran. <strong>Anda lulus program ini ketika mendapat nilai minimal 80%.</strong></p>
         <p>Bila Anda siap untuk memulai Assessment, silakan gunakan tautan di bawah ini. Semoga berhasil!</p>
 
         <br />

@@ -53,7 +53,7 @@
     </style>
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">LMS - Registered Financial Planner&reg;</h1>
+        <h1 class="h3 mb-0 text-gray-800">LMS - Kode Etik dan Rules of Conduct</h1>
     </div>
 
     <div class="row text-gray-900">
@@ -62,7 +62,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col text-center">
-                            <h2><strong>Latihan Ujian</strong></h2>
+                            <h2><strong>Assessment</strong></h2>
                         </div>
                     </div>
                     <br />
@@ -74,6 +74,33 @@
                         <tr>
                             <td>Nama peserta</td>
                             <td>: <?= $sessionData['name'] ?></td>
+                        </tr>
+                        <tr>
+                            <td>Waktu mulai</td>
+                            <td>: <?= isset($part1['attempt_created_at']) && $part1['attempt_created_at'] ? $part1['attempt_created_at'] : '-' ?></td>
+                        </tr>
+                        <tr>
+                            <td>Waktu selesai</td>
+                            <td>: <?= isset($part1['attempt_completed_at']) && $part1['attempt_completed_at'] ? $part1['attempt_completed_at'] : '-' ?></td>
+                        </tr>
+                        <tr>
+                            <td>Lama pengerjaan</td>
+                            <td>:
+                                <?php
+                                if (isset($part1['attempt_created_at'], $part1['attempt_completed_at']) && $part1['attempt_created_at'] && $part1['attempt_completed_at']) {
+                                    $start = new DateTime($part1['attempt_created_at']);
+                                    $end = new DateTime($part1['attempt_completed_at']);
+                                    $diff = $start->diff($end);
+                                    echo $diff->format('%h jam, %i menit, %s detik');
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Percobaan ke-</td>
+                            <td>: <?= isset($part1['attempt_number']) ? $part1['attempt_number'] : '-' ?></td>
                         </tr>
                     </table>
                 </div>
@@ -90,7 +117,18 @@
                             <?= session()->getFlashdata('error') ?>
                         </div>
                     <?php endif; ?>
-                    <p>Selamat telah menyelesaikan Latihan Ujian Registered Financial Planner&reg;.</p>
+                    <?php if ($part1['score'] < 80): ?>
+                        <div class="alert alert-danger">
+                            <strong>Nilai Anda di bawah 80%.</strong> Anda perlu mengulang assessment untuk mendapatkan nilai yang lebih baik.<br />
+                            Percobaan ke-<?= $part1['attempt_count'] ?> dari maksimal <?= $part1['max_attempts'] ?> percobaan.<br /><br />
+                            <?php if ($part1['attempt_count'] < $part1['max_attempts']): ?>
+                                <a href="<?= base_url('member/code-of-ethics/final-assessment/show') ?>" class="btn btn-primary">Ulangi Assessment</a>
+                            <?php else: ?>
+                                <span class="text-danger font-weight-bold">Anda telah mencapai batas maksimal percobaan assessment.</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <p>Selamat telah menyelesaikan Assessment Kode Etik dan Rules of Conduct.</p>
                     <p>Berikut ini adalah hasil evaluasi dan feedback dari jawaban Anda.</p>
                 </div>
             </div>
@@ -129,7 +167,7 @@
                                         foreach ($question['options'] as $option):
                                             $temp_submitted =  ($option['id'] == $part1['results'][$question['id']]['submitted_option']) ? true : false; ?>
                                             <li class="option-item" <?php if ($temp_submitted) : ?>
-                                                style="border-radius: 5px; background: palegoldenrod;"<?php endif; ?>>
+                                                style="border-radius: 5px; background: palegoldenrod;" <?php endif; ?>>
                                                 <label class="option-label">
                                                     <input type="radio" name="part1[<?= $question['id'] ?>]" value="<?= $option['id'] ?>" disabled="disabled"
                                                         <?php if ($temp_submitted) { ?> checked="checked" <?php } ?>>
@@ -160,6 +198,7 @@
                             <div class="alert alert-info">
                                 <p><strong>Total Penilaian: <?= $part1['correct_answers'] . ' / ' . $part1['total_questions'] ?></strong></p>
                             </div>
+
                             <a href="#part1" data-toggle="collapse" class="btn btn-warning">Sembunyikan Pilihan Ganda</a>
                         </div>
                     </div>

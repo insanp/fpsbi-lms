@@ -7,7 +7,7 @@
         <p>Kode Etik dan Rules of Conduct merupakan fondasi moral dan profesional bagi setiap perencana keuangan bersertifikat CFP. FPSB Indonesia menetapkan 8 prinsip kode etik—seperti mengutamakan kepentingan klien, integritas, objektivitas, keadilan, profesionalisme, kompetensi, kerahasiaan, dan kehati-hatian—sebagai pedoman utama yang wajib dipatuhi. Prinsip-prinsip ini menuntut setiap perencana untuk menempatkan klien sebagai prioritas utama, menjaga standar kejujuran, serta memberikan layanan dengan kualitas terbaik.</p>
         <p>Selain itu, terdapat 37 Rules of Conduct yang menjabarkan aturan praktis dalam menjalankan profesi, mulai dari larangan memberikan informasi menyesatkan, kewajiban menjaga kerahasiaan data, hingga ketentuan keterbukaan atas konflik kepentingan. Aturan ini bukan sekadar formalitas, tetapi bertujuan memastikan agar profesi perencana keuangan dijalankan secara adil, transparan, dan akuntabel. Melalui pemahaman kode etik dan rules of conduct, peserta akan menyadari pentingnya membangun kepercayaan klien sekaligus menjaga reputasi profesi di mata publik.</p>
         <p><strong>Materi Slide</strong><br />
-            <i class="fas fa-file-pdf"></i> <a href="<?= base_url('member/download/Code of Ethics and Rules of Conduct.pdf') ?>">Code of Ethics and Rules of Conduct.pdf</a>
+            <i class="fas fa-file-pdf"></i> <a href="<?= base_url('member/download/Kode Etik dan Rules of Conduct.pdf') ?>">Kode Etik dan Rules of Conduct.pdf</a>
         </p>
         <br />
         <h4 class="text-center">Video Code of Ethics and Rules of Conduct<br /> <span class="text-xs">Duration: 37m 44s</span></h4>

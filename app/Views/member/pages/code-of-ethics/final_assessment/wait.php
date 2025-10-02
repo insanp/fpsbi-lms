@@ -4,7 +4,7 @@
 <div class="container-fluid topic-content-container">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">LMS - Registered Financial Planner&reg;</h1>
+        <h1 class="h3 mb-0 text-gray-800">LMS - Kode Etik dan Rules of Conduct</h1>
     </div>
 
     <div class="row text-gray-900">
@@ -13,7 +13,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col text-center">
-                            <h2><strong>Latihan Ujian</strong></h2>
+                            <h2><strong>Assessment</strong></h2>
                         </div>
                     </div>
                     <br />
@@ -36,7 +36,7 @@
         <div class="col-lg-10 text-center">
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <p>Selamat telah menyelesaikan Latihan Ujian Registered Financial Planner&reg;.</p>
+                    <p>Selamat telah menyelesaikan Assessment.</p>
                     <div class="alert alert-danger" role="alert">
                         Ada masalah dalam penilaian jawaban otomatis oleh sistem.<br />Mohon informasikan admin terkait masalah ini. Terima kasih.<br />
                     </div>

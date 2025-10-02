@@ -54,7 +54,7 @@
     </style>
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">LMS - Registered Financial Planner&reg;</h1>
+        <h1 class="h3 mb-0 text-gray-800">LMS - Kode Etik dan Rules of Conduct</h1>
     </div>
 
     <div class="row text-gray-900">
@@ -63,7 +63,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col text-center">
-                            <h2><strong>Latihan Ujian</strong></h2>
+                            <h2><strong>Assessment</strong></h2>
                         </div>
                     </div>
                     <br />
@@ -78,11 +78,19 @@
                         </tr>
                         <tr>
                             <td>Tanggal sejak dimulai</td>
-                            <td>: <span id="start-time"><?= $part1Data['task']['created_at'] ?></span>
+                            <td>: <span id="start-time">
+                                <?= isset($current_attempt_created_at) ? $current_attempt_created_at : '-' ?>
+                                </span>
                                 <!-- Dynamic elapsed time display -->
-                                <span id="elapsed-time" data-created-at="<?= $part1Data['task']['created_at'] ?>"></span>
+                                <span id="elapsed-time" data-created-at="<?= isset($current_attempt_created_at) ? $current_attempt_created_at : '' ?>"></span>
                             </td>
                         </tr>
+                        <?php if (isset($current_attempt) && $current_attempt > 0): ?>
+                            <tr>
+                                <td>Percobaan ke-</td>
+                                <td>: <?= $current_attempt ?></td>
+                            </tr>
+                        <?php endif; ?>
                     </table>
                 </div>
             </div>
@@ -90,7 +98,7 @@
     </div>
 
     <!-- start exam form -->
-    <form id="assessment-form" action="<?= base_url('member/rfp-ins/final-assessment/submit') ?>" method="POST">
+    <form id="assessment-form" action="<?= base_url('member/code-of-ethics/final-assessment/submit') ?>" method="POST">
         <div class="row text-gray-900">
             <div class="col-lg-10">
                 <div id="exam-part-1">

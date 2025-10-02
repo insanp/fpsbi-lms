@@ -26,23 +26,34 @@ class ProgressModel extends Model
         }
 
         $latestCompletedAt = null;
+        $taskModel = new TaskModel();
         foreach ($tasks as $task) {
-            // Check if the task is completed
-            if (!$taskAttemptModel->isTaskCompleted($task['id'], $userId)) {
-                return false; // Early exit if any task is not completed
-            }
-            // Retrieve the latest attempt record for this task
-            $attempt = $taskAttemptModel->where([
-                'task_id' => $task['id'],
-                'user_id' => $userId
-            ])->orderBy('completed_at', 'DESC')->first();
-
-            if ($attempt && !empty($attempt['completed_at'])) {
-                $latestCompletedAt = $attempt['completed_at'];
+            if ($task['type'] === 'exam_mc') {
+                // Only consider attempts with score >= 80 and completed_at not null for exam_mc
+                $attempt = $taskAttemptModel->where([
+                    'task_id' => $task['id'],
+                    'user_id' => $userId
+                ])->where('score >=', 80)->where('completed_at IS NOT NULL')->orderBy('completed_at', 'DESC')->first();
+                if (!$attempt) {
+                    return false; // Early exit if no passing attempt
+                }
+                if (!empty($attempt['completed_at'])) {
+                    $latestCompletedAt = $attempt['completed_at'];
+                }
+            } else {
+                // For other types, use original completion logic
+                if (!$taskAttemptModel->isTaskCompleted($task['id'], $userId)) {
+                    return false;
+                }
+                $attempt = $taskAttemptModel->where([
+                    'task_id' => $task['id'],
+                    'user_id' => $userId
+                ])->orderBy('completed_at', 'DESC')->first();
+                if ($attempt && !empty($attempt['completed_at'])) {
+                    $latestCompletedAt = $attempt['completed_at'];
+                }
             }
         }
-
-        // Insert progress using latest completed_at timestamp; defaults to current timestamp if null
         $this->insertProgress($userId, $topicId, $latestCompletedAt);
         return true;
     }
