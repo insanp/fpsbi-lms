@@ -185,7 +185,7 @@ class App extends BaseConfig
                 $this->baseURL = 'http://localhost/fpsbi-lms/public/';
                 break;
             case 'staging':
-                $this->baseURL = 'https://staginglms.fpsbindonesia.net/';
+                $this->baseURL = 'https://staging-lms.fpsbindonesia.net/';
                 break;
             case 'production':
                 $this->baseURL = 'https://lms.fpsbindonesia.net/';
