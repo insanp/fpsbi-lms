@@ -59,6 +59,8 @@ $routes->group('admin/users', ['namespace' => '\App\Controllers\Admin'], functio
     $routes->get('/', 'Users::index');
     $routes->get('create', 'Users::create');
     $routes->post('store', 'Users::store');
+    $routes->post('uploadImportFile', 'Users::uploadImportFile');
+    $routes->post('processImportBatch', 'Users::processImportBatch');
     $routes->get('search-suggestion', 'Users::searchSuggestion');
     $routes->get('(:segment)', 'Users::show/$1');
     $routes->get('(:segment)/edit', 'Users::edit/$1');

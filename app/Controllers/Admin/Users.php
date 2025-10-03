@@ -2,11 +2,14 @@
 
 namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\UserModel;
-use CodeIgniter\Controller;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
-class Users extends \App\Controllers\BaseController
+class Users extends BaseController
 {
+
   private $session;
   private $sessionData;
 
@@ -14,7 +17,6 @@ class Users extends \App\Controllers\BaseController
   {
     // Ensure the session library is loaded
     $this->session = session();
-
     // Load the UserModel or any other necessary models
     $this->sessionData = $this->session->get('user');
   }
@@ -23,17 +25,12 @@ class Users extends \App\Controllers\BaseController
   {
     $userModel = new UserModel();
     $perPage = $this->request->getGet('perPage') ?? 10;
-
     $searchTerm = $this->request->getGet('search');
-
     if ($searchTerm) {
-      // if search exists
       $users = $userModel->searchUsers($searchTerm)->paginate($perPage);
     } else {
-      // default
       $users = $userModel->orderBy('id', 'desc')->paginate($perPage);
     }
-
     return view('admin/pages/users/index', [
       'sessionData' => $this->sessionData,
       'users' => $users,
@@ -163,6 +160,7 @@ class Users extends \App\Controllers\BaseController
     return redirect()->to('/admin/users');
   }
 
+
   public function searchSuggestion()
   {
     $query = $this->request->getGet('query');
@@ -176,5 +174,127 @@ class Users extends \App\Controllers\BaseController
     foreach ($users as $user) {
       echo "<div class='suggestion btn btn-secondary mb-1' onclick='selectUser(" . json_encode($user) . ")'>" . esc($user['member_id']) . ' - ' . esc($user['name']) . " (" . esc($user['email']) . ")</div><br/>";
     }
+  }
+
+  // AJAX endpoint: upload file, save to temp, return token
+  public function uploadImportFile()
+  {
+    $file = $this->request->getFile('excelFile');
+    if (!$file || !$file->isValid()) {
+      return $this->response->setJSON(['success' => false, 'error' => 'No file uploaded or file is invalid.']);
+    }
+    $newName = uniqid('import_', true) . '.' . $file->getExtension();
+    $path = WRITEPATH . 'uploads/' . $newName;
+    $file->move(WRITEPATH . 'uploads', $newName);
+    return $this->response->setJSON(['success' => true, 'token' => $newName]);
+  }
+
+  // AJAX endpoint: process a batch of rows from the uploaded file
+  public function processImportBatch()
+  {
+    $token = $this->request->getPost('token');
+    $batch = (int)$this->request->getPost('batch');
+    $batchSize = (int)$this->request->getPost('batchSize') ?: 200;
+    $filePath = WRITEPATH . 'uploads/' . $token;
+    if (!is_file($filePath)) {
+      return $this->response->setJSON(['success' => false, 'error' => 'File not found.']);
+    }
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $rows = [];
+    if ($extension === 'csv') {
+      if (($handle = fopen($filePath, 'r')) !== false) {
+        while (($data = fgetcsv($handle, 0, ';')) !== false) {
+          $rows[] = $data;
+        }
+        fclose($handle);
+      }
+    } else {
+      require_once(ROOTPATH . 'vendor/autoload.php');
+      $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+      $sheet = $spreadsheet->getActiveSheet();
+      $rows = $sheet->toArray();
+    }
+    if (count($rows) < 3) {
+      return $this->response->setJSON(['success' => false, 'error' => 'File must have at least 3 rows (header at row 3).']);
+    }
+    $header = $rows[2];
+    $headerLower = array_map('strtolower', $header);
+    $nameIdx = array_search('name', $headerLower);
+    $emailPersonIdx = array_search('email person', $headerLower);
+    $emailOfficeIdx = array_search('email office', $headerLower);
+    $fpsbMemberIdIdx = array_search('member id', $headerLower);
+    if ($nameIdx === false || ($emailPersonIdx === false && $emailOfficeIdx === false) || $fpsbMemberIdIdx === false) {
+      return $this->response->setJSON(['success' => false, 'error' => 'File must have columns: Name, Email Person or Email Office, Member ID.']);
+    }
+    $startRow = 3 + $batch * $batchSize;
+    $endRow = min($startRow + $batchSize, count($rows));
+    $userModel = new UserModel();
+    $imported = 0;
+    $updated = 0;
+    $importedUsers = [];
+    $updatedUsers = [];
+    for ($i = $startRow; $i < $endRow; $i++) {
+      $row = $rows[$i];
+      $name = isset($row[$nameIdx]) ? trim($row[$nameIdx]) : '';
+      $emailPerson = ($emailPersonIdx !== false && isset($row[$emailPersonIdx])) ? trim($row[$emailPersonIdx]) : '';
+      $emailOffice = ($emailOfficeIdx !== false && isset($row[$emailOfficeIdx])) ? trim($row[$emailOfficeIdx]) : '';
+      $email = $emailPerson ?: $emailOffice;
+      $fpsbMemberId = isset($row[$fpsbMemberIdIdx]) ? trim($row[$fpsbMemberIdIdx]) : '';
+      // Remove spaces and take first 8 chars only
+      $fpsbMemberId = substr(str_replace(' ', '', $fpsbMemberId), 0, 8);
+      if (!$name || !$email || !$fpsbMemberId) continue;
+      $existing = $userModel->where('email', $email)->first();
+      if ($existing) {
+        $userModel->update($existing['id'], [
+          'name' => $name,
+          'member_id' => $fpsbMemberId
+        ]);
+        $updated++;
+        $updatedUsers[] = [
+          'name' => $name,
+          'email' => $email
+        ];
+      } else {
+        $userData = [
+          'member_id' => $fpsbMemberId,
+          'name' => $name,
+          'email' => $email,
+          'cfp_member_id' => $fpsbMemberId,
+          'password' => '',
+          'password_confirm' => '',
+          'is_active' => 0,
+        ];
+        $validation = \Config\Services::validation();
+        $validation->setRules($userModel->getValidationRules(), $userModel->getValidationMessages());
+        if ($validation->run($userData)) {
+          $userModel->insert($userData);
+          $imported++;
+          $importedUsers[] = [
+            'name' => $name,
+            'email' => $email
+          ];
+        } else {
+          $failedUsers[] = [
+            'name' => $name,
+            'email' => $email,
+            'error' => implode('; ', $validation->getErrors())
+          ];
+        }
+      }
+    }
+    $totalRows = count($rows) - 3;
+    $processed = min(($batch + 1) * $batchSize, $totalRows);
+    $done = $processed >= $totalRows;
+    return $this->response->setJSON([
+      'success' => true,
+      'imported' => $imported,
+      'updated' => $updated,
+      'processed' => $processed,
+      'total' => $totalRows,
+      'done' => $done,
+      'importedUsers' => $importedUsers,
+      'updatedUsers' => $updatedUsers,
+      'failedUsers' => isset($failedUsers) ? $failedUsers : []
+    ]);
   }
 }
