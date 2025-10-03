@@ -235,12 +235,18 @@
                         // Auto-scroll to bottom
                         $log.scrollTop($log[0].scrollHeight);
 
+                        // Count failed imports incrementally
+                        if (typeof window.failedCount === 'undefined') window.failedCount = 0;
+                        if (resp.failedUsers && resp.failedUsers.length) {
+                            window.failedCount += resp.failedUsers.length;
+                        }
+
                         if (resp.done) {
-                            $('#batchImportStatus').html('<span class="text-success">Batch import complete. Imported: ' + imported + ', Updated: ' + updated + '.</span>');
+                            $('#batchImportStatus').html('<span class="text-success">Batch import complete. Imported: ' + imported + ', Updated: ' + updated + ', <span class="text-danger">Failed: ' + (window.failedCount || 0) + '</span>.</span>');
                             $('#startBatchImport').prop('disabled', false);
                             $('#refreshAfterImport').show();
                         } else {
-                            $('#batchImportStatus').html('Processing batch ' + (batch + 1) + '... Imported: ' + imported + ', Updated: ' + updated + '.');
+                            $('#batchImportStatus').html('Processing batch ' + (batch + 1) + '... Imported: ' + imported + ', Updated: ' + updated + ', <span class="text-danger">Failed: ' + (window.failedCount || 0) + '</span>.');
                             runBatch(batch + 1);
                         }
                         // Manual refresh button handler
