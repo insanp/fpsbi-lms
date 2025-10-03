@@ -4,5 +4,5 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>IFP Indonesia - Portal</title>
+    <title><?= WEBSITE_NAME ?> - Portal</title>
     <meta name="robots" content="noindex, nofollow">

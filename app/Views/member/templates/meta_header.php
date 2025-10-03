@@ -4,5 +4,5 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>IFP Learning Indonesia - Membership Area</title>
+    <title><?= WEBSITE_NAME ?> - Membership Area</title>
     <meta name="robots" content="noindex, nofollow">
