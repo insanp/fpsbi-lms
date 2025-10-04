@@ -41,23 +41,38 @@
                 <div class="progress mt-2" style="height: 25px; display:none;" id="batchProgressBarContainer">
                     <div id="batchProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
                 </div>
-                <div id="batchImportStatus" class="mt-2"></div>
-                <div id="batchImportLog" class="mt-2" style="max-height:200px;overflow:auto;"></div>
-                <style>
-                #batchImportLog.terminal-log {
-                    background: #181818;
-                    color: #e0e0e0;
-                    font-family: "Fira Mono", "Consolas", "Menlo", monospace;
-                    font-size: 14px;
-                    border-radius: 6px;
-                    padding: 10px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                }
-                #batchImportLog .log-insert { color: #7fff7f; }
-                #batchImportLog .log-update { color: #7fdfff; }
-                #batchImportLog .log-fail { color: #ff7f7f; }
-                </style>
-                <button type="button" id="refreshAfterImport" class="btn btn-success mt-2" style="display:none;">Refresh</button>
+                                <div id="batchImportStatus" class="mt-2"></div>
+                                <ul class="nav nav-tabs" id="logTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="all-log-tab" data-toggle="tab" href="#all-log" role="tab" aria-controls="all-log" aria-selected="true">All Logs</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="failed-log-tab" data-toggle="tab" href="#failed-log" role="tab" aria-controls="failed-log" aria-selected="false">Failed Only</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="logTabsContent">
+                                    <div class="tab-pane fade show active" id="all-log" role="tabpanel" aria-labelledby="all-log-tab">
+                                        <div id="batchImportLog" class="mt-2" style="max-height:200px;overflow:auto;"></div>
+                                    </div>
+                                    <div class="tab-pane fade" id="failed-log" role="tabpanel" aria-labelledby="failed-log-tab">
+                                        <div id="batchImportFailedLog" class="mt-2" style="max-height:200px;overflow:auto;"></div>
+                                    </div>
+                                </div>
+                                <style>
+                                #batchImportLog.terminal-log, #batchImportFailedLog.terminal-log {
+                                        background: #181818;
+                                        color: #e0e0e0;
+                                        font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+                                        font-size: 14px;
+                                        border-radius: 6px;
+                                        padding: 10px;
+                                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                                }
+                                #batchImportLog .log-insert, #batchImportFailedLog .log-insert { color: #7fff7f; }
+                                #batchImportLog .log-update, #batchImportFailedLog .log-update { color: #7fdfff; }
+                                #batchImportLog .log-fail, #batchImportFailedLog .log-fail { color: #ff7f7f; }
+                                </style>
+                                <button type="button" id="refreshAfterImport" class="btn btn-success mt-2" style="display:none;">Refresh</button>
             </div>
             <div class="table-responsive">
                 <div id="dataTable_wrapper" class="dataTables_wrapper dt-bootstrap4">
@@ -216,24 +231,29 @@
 
                         // Show incremental log like a terminal
                         var $log = $('#batchImportLog');
+                        var $failedLog = $('#batchImportFailedLog');
                         $log.addClass('terminal-log');
+                        $failedLog.addClass('terminal-log');
                         if (resp.importedUsers && resp.importedUsers.length) {
                             resp.importedUsers.forEach(function(u) {
-                                $log.append('<div class="log-insert">$ Inserted: ' + u.name + ' (' + u.email + ')</div>');
+                                $log.append('<div class="log-insert">$ Inserted: [' + (u.member_id || '-') + '] ' + u.name + ' (' + u.email + ') </div>');
                             });
                         }
                         if (resp.updatedUsers && resp.updatedUsers.length) {
                             resp.updatedUsers.forEach(function(u) {
-                                $log.append('<div class="log-update">$ Updated: ' + u.name + ' (' + u.email + ')</div>');
+                                $log.append('<div class="log-update">$ Updated&nbsp;: [' + (u.member_id || '-') + '] ' + u.name + ' (' + u.email + ') </div>');
                             });
                         }
                         if (resp.failedUsers && resp.failedUsers.length) {
                             resp.failedUsers.forEach(function(u) {
-                                $log.append('<div class="log-fail">$ Failed: ' + u.name + ' (' + u.email + ') - ' + u.error + '</div>');
+                                var failMsg = '<div class="log-fail">$ Failed&nbsp;&nbsp;: [' + (u.member_id || '-') + '] ' + u.name + ' (' + u.email + ')  - ' + u.error + '</div>';
+                                $log.append(failMsg);
+                                $failedLog.append(failMsg);
                             });
                         }
                         // Auto-scroll to bottom
                         $log.scrollTop($log[0].scrollHeight);
+                        $failedLog.scrollTop($failedLog[0].scrollHeight);
 
                         // Count failed imports incrementally
                         if (typeof window.failedCount === 'undefined') window.failedCount = 0;

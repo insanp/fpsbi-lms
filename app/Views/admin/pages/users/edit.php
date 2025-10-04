@@ -21,7 +21,7 @@
             <input type="hidden" name="id" value="<?= $user['id'] ?>">
             <div class="form-group">
                 <label for="member ID">Member ID:</label>
-                <input type="text" class="form-control form-control-user" name="member_id" placeholder="SXXXXXXX" pattern="F\d{7}" value="<?= old('member_id', $user['member_id']); ?>" maxlength="8">
+                <input type="text" class="form-control form-control-user" name="member_id" placeholder="DDDDDDDD" value="<?= old('member_id', $user['member_id']); ?>" maxlength="8">
             </div>
 
             <div class="form-group">

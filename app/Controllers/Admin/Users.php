@@ -43,7 +43,7 @@ class Users extends BaseController
   public function create()
   {
     $userModel = new UserModel();
-    $memberId = $userModel->generateMemberId();
+    $memberId = '';
     $validation_errors = session()->getFlashdata('validation_errors');
     return view('admin/pages/users/create', [
       'memberId' => $memberId,
@@ -192,9 +192,12 @@ class Users extends BaseController
   // AJAX endpoint: process a batch of rows from the uploaded file
   public function processImportBatch()
   {
+    // getting params
     $token = $this->request->getPost('token');
     $batch = (int)$this->request->getPost('batch');
     $batchSize = (int)$this->request->getPost('batchSize') ?: 200;
+
+    // read the file
     $filePath = WRITEPATH . 'uploads/' . $token;
     if (!is_file($filePath)) {
       return $this->response->setJSON(['success' => false, 'error' => 'File not found.']);
@@ -217,6 +220,8 @@ class Users extends BaseController
     if (count($rows) < 3) {
       return $this->response->setJSON(['success' => false, 'error' => 'File must have at least 3 rows (header at row 3).']);
     }
+
+    // process the batch
     $header = $rows[2];
     $headerLower = array_map('strtolower', $header);
     $nameIdx = array_search('name', $headerLower);
@@ -229,56 +234,174 @@ class Users extends BaseController
     $startRow = 3 + $batch * $batchSize;
     $endRow = min($startRow + $batchSize, count($rows));
     $userModel = new UserModel();
+
+    // collecting import results
     $imported = 0;
     $updated = 0;
     $importedUsers = [];
     $updatedUsers = [];
+    $failedUsers = [];
+    $toInsert = [];
+    $toUpdate = [];
+    $existingEmails = [];
+    // Collect all emails in this batch
+    $batchMemberIds = [];
     for ($i = $startRow; $i < $endRow; $i++) {
       $row = $rows[$i];
+      $fpsbMemberId = isset($row[$fpsbMemberIdIdx]) ? trim($row[$fpsbMemberIdIdx]) : '';
+      $fpsbMemberId = substr(str_replace(' ', '', $fpsbMemberId), 0, 8);
+      if ($fpsbMemberId) $batchMemberIds[] = $fpsbMemberId;
+    }
+    // Query all existing users in this batch by member_id
+    $batchEmails = [];
+    $existingUsers = [];
+    if (!empty($batchMemberIds) || !empty($existingEmails)) {
+      // Collect all emails in this batch
+      for ($i = $startRow; $i < $endRow; $i++) {
+        $row = $rows[$i];
+        $emailPerson = ($emailPersonIdx !== false && isset($row[$emailPersonIdx])) ? trim($row[$emailPersonIdx]) : '';
+        $emailOffice = ($emailOfficeIdx !== false && isset($row[$emailOfficeIdx])) ? trim($row[$emailOfficeIdx]) : '';
+        $email = $emailPerson ?: $emailOffice;
+        if ($email) $batchEmails[] = strtolower($email);
+      }
+      $existingUsersArr = $userModel
+        ->groupStart()
+        ->whereIn('member_id', $batchMemberIds)
+        ->orWhereIn('LOWER(email)', $batchEmails)
+        ->groupEnd()
+        ->findAll();
+      foreach ($existingUsersArr as $eu) {
+        if (!empty($eu['member_id'])) $existingUsers['member_id'][$eu['member_id']] = $eu;
+        if (!empty($eu['email'])) $existingUsers['email'][strtolower($eu['email'])] = $eu;
+      }
+    }
+    // Prepare batch insert/update arrays
+    // Deduplicate by member_id, keep only the last occurrence
+    $dedupedRows = [];
+    for ($i = $startRow; $i < $endRow; $i++) {
+      $row = $rows[$i];
+      $fpsbMemberId = isset($row[$fpsbMemberIdIdx]) ? trim($row[$fpsbMemberIdIdx]) : '';
+      $fpsbMemberId = substr(str_replace(' ', '', $fpsbMemberId), 0, 8);
+      if ($fpsbMemberId) {
+        $dedupedRows[$fpsbMemberId] = $row;
+      }
+    }
+
+    foreach ($dedupedRows as $row) {
       $name = isset($row[$nameIdx]) ? trim($row[$nameIdx]) : '';
       $emailPerson = ($emailPersonIdx !== false && isset($row[$emailPersonIdx])) ? trim($row[$emailPersonIdx]) : '';
       $emailOffice = ($emailOfficeIdx !== false && isset($row[$emailOfficeIdx])) ? trim($row[$emailOfficeIdx]) : '';
       $email = $emailPerson ?: $emailOffice;
+
+      // Aggressively clean email: remove all whitespace and invisible characters
+      $email = preg_replace('/\s+/', '', $email);
+      $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+      $email = trim($email);
+      $email = strtolower($email);
+
       $fpsbMemberId = isset($row[$fpsbMemberIdIdx]) ? trim($row[$fpsbMemberIdIdx]) : '';
-      // Remove spaces and take first 8 chars only
       $fpsbMemberId = substr(str_replace(' ', '', $fpsbMemberId), 0, 8);
       if (!$name || !$email || !$fpsbMemberId) continue;
-      $existing = $userModel->where('email', $email)->first();
+      $lowerEmail = strtolower($email);
+      $existingById = isset($existingUsers['member_id'][$fpsbMemberId]) ? $existingUsers['member_id'][$fpsbMemberId] : null;
+      $existingByEmail = isset($existingUsers['email'][$lowerEmail]) ? $existingUsers['email'][$lowerEmail] : null;
+      $existing = $existingById ?: $existingByEmail;
       if ($existing) {
-        $userModel->update($existing['id'], [
+        $toUpdate[] = [
+          'id' => $existing['id'],
           'name' => $name,
           'member_id' => $fpsbMemberId
-        ]);
-        $updated++;
+        ];
         $updatedUsers[] = [
           'name' => $name,
-          'email' => $email
+          'email' => $email,
+          'member_id' => $fpsbMemberId
         ];
       } else {
         $userData = [
           'member_id' => $fpsbMemberId,
           'name' => $name,
           'email' => $email,
-          'cfp_member_id' => $fpsbMemberId,
           'password' => '',
           'password_confirm' => '',
           'is_active' => 0,
         ];
         $validation = \Config\Services::validation();
+        $validation->reset();
         $validation->setRules($userModel->getValidationRules(), $userModel->getValidationMessages());
         if ($validation->run($userData)) {
-          $userModel->insert($userData);
-          $imported++;
+          $toInsert[] = $userData;
           $importedUsers[] = [
             'name' => $name,
-            'email' => $email
+            'email' => $email,
+            'member_id' => $fpsbMemberId
           ];
         } else {
           $failedUsers[] = [
             'name' => $name,
             'email' => $email,
+            'member_id' => $fpsbMemberId,
             'error' => implode('; ', $validation->getErrors())
           ];
+        }
+      }
+    }
+    // Batch update (custom SQL)
+    if (!empty($toUpdate)) {
+      $db = \Config\Database::connect();
+      $builder = $db->table($userModel->getTable());
+      foreach ($toUpdate as $updateData) {
+        $builder->where('id', $updateData['id'])->update([
+          'name' => $updateData['name'],
+          'member_id' => $updateData['member_id']
+        ]);
+        $updated++;
+      }
+    }
+    // Batch insert
+    if (!empty($toInsert)) {
+      // Deduplicate by email within the batch, keep only the last occurrence
+      $emailMap = [];
+      foreach ($toInsert as $idx => $userData) {
+        $emailMap[$userData['email']] = $idx; // last occurrence wins
+      }
+      $dedupedToInsert = [];
+      foreach ($toInsert as $idx => $userData) {
+        if ($emailMap[$userData['email']] === $idx) {
+          $dedupedToInsert[] = $userData;
+        } else {
+          $failedUsers[] = [
+            'name' => $userData['name'],
+            'email' => $userData['email'],
+            'member_id' => $userData['member_id'],
+            'error' => 'Duplicate email in import file.'
+          ];
+        }
+      }
+      try {
+        $userModel->insertBatch($dedupedToInsert);
+        $imported += count($dedupedToInsert);
+      } catch (\Exception $e) {
+        // If batch insert fails, likely due to duplicate email in DB, handle gracefully
+        $db = \Config\Database::connect();
+        $table = $userModel->getTable();
+        $remaining = [];
+        foreach ($dedupedToInsert as $userData) {
+          $exists = $db->table($table)->where('email', $userData['email'])->countAllResults() > 0;
+          if ($exists) {
+            $failedUsers[] = [
+              'name' => $userData['name'],
+              'email' => $userData['email'],
+              'member_id' => $userData['member_id'],
+              'error' => 'Duplicate email in database.'
+            ];
+          } else {
+            $remaining[] = $userData;
+          }
+        }
+        if (!empty($remaining)) {
+          $userModel->insertBatch($remaining);
+          $imported += count($remaining);
         }
       }
     }
