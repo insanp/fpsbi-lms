@@ -135,7 +135,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:10px;padding-top:10px;width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div class="alignment" align="center">
-                                                                    <div style="max-width: 300px;"><a href="<?= base_url() ?>" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia.webp') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="300" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
+                                                                    <div style="max-width: 300px;"><a href="<?= base_url() ?>" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia.png') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="300" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
