@@ -7,6 +7,11 @@
         <h1 class="h3 mb-0 text-gray-800">Profile</h1>
     </div>
     <p class="mb-4">Edit profil saya</p>
+    <?php if (session()->getFlashdata('message')): ?>
+        <div class="alert alert-info" role="alert">
+            <?= session()->getFlashdata('message') ?>
+        </div>
+    <?php endif; ?>
     <div class="card shadow mb-4 p-4">
         <?php
         helper('form');

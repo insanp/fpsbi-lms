@@ -50,6 +50,8 @@ $routes->group('member/api', ['namespace' => '\App\Controllers\Member'], functio
 $routes->get('/auth/login-form', 'Auth::showLoginForm');
 $routes->post('/auth/login', 'Auth::login');
 $routes->get('/auth/logout', 'Auth::logout');
+$routes->post('/auth/forgot', 'Auth::forgotPassword');
+$routes->get('/auth/reset-password/(:segment)', 'Auth::resetPassword/$1');
 
 // admin section
 $routes->get('/admin', 'Admin\Home::index');

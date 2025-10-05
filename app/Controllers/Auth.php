@@ -121,4 +121,82 @@ class Auth extends BaseController
         }
         return $alumniStatus;
     }
+
+    // Handle forgot password request
+    public function forgotPassword()
+    {
+        $email = $this->request->getPost('email');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->where('email', $email)->first();
+
+        if ($user) {
+            if (isset($user['is_active']) && !$user['is_active']) {
+                // User exists but is not active
+                return redirect()->to('/auth/login-form')->with('message', 'Akun Anda tidak aktif. Harap hubungi admin untuk mengaktifkan akun Anda.');
+            }
+            // Generate a secure token
+            $token = bin2hex(random_bytes(32));
+            $expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+            $resetModel = new \App\Models\PasswordResetModel();
+            $resetModel->insert([
+                'user_id' => $user['id'],
+                'token' => $token,
+                'expires_at' => $expires,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Send email with user name
+            $this->sendResetEmail($user['email'], $token, $user['member_id'], $user['name']);
+        }
+        // Always show the same message for security
+        return redirect()->to('/auth/login-form')->with('message', 'Jika email terdaftar, link reset password telah dikirim.');
+    }
+
+    public function sendResetEmail($email, $token, $member_id, $name)
+    {
+        $emailService = \Config\Services::email();
+
+        $data = array(
+            'member_id' => $member_id,
+            'name' => $name,
+            'email' => $email,
+            'link' => base_url("auth/reset-password/{$token}")
+        );
+        $htmlData = view('emails/reset_password', ['data' => $data]);
+
+        $emailService->setTo($email); // Send to user
+        $emailService->setSubject('LMS FPSB Indonesia - Permintaan Reset Password');
+        $emailService->setMessage($htmlData); // HTML content
+        $emailService->setMailType('html');
+        $emailService->send();
+    }
+
+    // Handle reset password link: validate token, login user, redirect to profile edit
+    public function resetPassword($token)
+    {
+        $resetModel = new \App\Models\PasswordResetModel();
+        $reset = $resetModel->where('token', $token)
+            ->where('expires_at >=', date('Y-m-d H:i:s'))
+            ->first();
+
+        if (!$reset) {
+            return redirect()->to('/auth/login-form')->with('message', 'Link reset password tidak valid atau sudah kedaluwarsa.');
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($reset['user_id']);
+        if (!$user) {
+            return redirect()->to('/auth/login-form')->with('message', 'User tidak ditemukan.');
+        }
+
+        // Log the user in
+        $session = session();
+        $session->set('user', $user);
+
+        // Optionally, delete the token so it can't be reused
+        $resetModel->delete($reset['id']);
+
+        // Redirect to profile edit with message
+        return redirect()->to('/member/profile/edit')->with('message', 'Silakan update password sekarang.');
+    }
 }

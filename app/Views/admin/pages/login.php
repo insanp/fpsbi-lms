@@ -31,7 +31,7 @@
                                     }
                                 }
                                 ?>
-                                <form class="user" action="<?= base_url('auth/login') ?>" method="post">
+                                <form id="login-form" class="user" action="<?= base_url('auth/login') ?>" method="post">
                                     <div class="form-group">
                                         <input type="email" class="form-control form-control-user" id="exampleInputEmail" aria-describedby="emailHelp" name="email" placeholder="Enter Email Address..." value="<?= old('email') ?>">
                                     </div>
@@ -41,6 +41,20 @@
                                     <button type="submit" id="form-submit" class="btn btn-primary btn-user btn-block">
                                         Login
                                     </button>
+                                    <div class="text-center mt-3">
+                                        <a href="#" id="show-forgot" style="font-size: 0.9em;">Forgot Password?</a>
+                                    </div>
+                                </form>
+                                <form id="forgot-form" class="user" action="<?= base_url('auth/forgot') ?>" method="post" style="display:none;">
+                                    <div class="form-group">
+                                        <input type="email" class="form-control form-control-user" name="email" placeholder="Enter your email address..." required>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning btn-user btn-block">
+                                        Send Reset Link
+                                    </button>
+                                    <div class="text-center mt-3">
+                                        <a href="#" id="back-to-login" style="font-size: 0.9em;">Back to Login</a>
+                                    </div>
                                 </form>
                                 <hr>
                             </div>
@@ -54,4 +68,26 @@
     </div>
 
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var showForgot = document.getElementById('show-forgot');
+        var backToLogin = document.getElementById('back-to-login');
+        var loginForm = document.getElementById('login-form');
+        var forgotForm = document.getElementById('forgot-form');
+        if (showForgot) {
+            showForgot.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                forgotForm.style.display = 'block';
+            });
+        }
+        if (backToLogin) {
+            backToLogin.addEventListener('click', function(e) {
+                e.preventDefault();
+                forgotForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+        }
+    });
+</script>
 <?= $this->endSection() ?>
