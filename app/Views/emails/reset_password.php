@@ -126,7 +126,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #10305b; color: #000000; width: 700px; margin: 0 auto;" width="700">
+                                <table class="row-content stack" align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffffff; color: #000000; width: 700px; margin: 0 auto;" width="700">
                                     <tbody>
                                         <tr>
                                             <td class="column column-1" width="100%" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;">
@@ -135,7 +135,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:10px;padding-top:10px;width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div class="alignment" align="center">
-                                                                    <div style="max-width: 300px;"><a href="&lt;?=base_url()?&gt;" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia_white.webp') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="300" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
+                                                                    <div style="max-width: 300px;"><a href="&lt;?=base_url()?&gt;" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia.webp') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="300" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
