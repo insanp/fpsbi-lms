@@ -33,7 +33,7 @@
             <div class="mb-4">
                 <form id="batchImportForm" enctype="multipart/form-data" onsubmit="return false;">
                     <div class="form-group">
-                        <label for="batchExcelFile">Batch Import Users (AJAX, progress bar):</label>
+                        <label for="batchExcelFile">Batch Import Users (.csv atau .xlsx. Disarankan .csv dengan delimiter ';'):</label>
                         <input type="file" name="excelFile" id="batchExcelFile" class="form-control-file" accept=".xlsx,.csv" required>
                     </div>
                     <button type="button" id="startBatchImport" class="btn btn-info">Upload & Batch Import</button>
@@ -77,7 +77,7 @@
             <div class="table-responsive">
                 <div id="dataTable_wrapper" class="dataTables_wrapper dt-bootstrap4">
                     <a href="<?= base_url('admin/users/create') ?>" class="btn btn-success btn-icon-split">
-                        <span class="text">+ Tambah</span>
+                        <span class="text">+ Tambah Manual</span>
                     </a>
                     <br /> <br />
                     <form action="<?= base_url('admin/users') ?>" method="get">

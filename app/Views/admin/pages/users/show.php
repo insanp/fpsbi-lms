@@ -56,6 +56,43 @@
                 <a href="<?= base_url('admin/users') ?>" class="btn btn-secondary btn-icon-split">
                     <span class="text">Kembali ke list</span>
                 </a>
+                <button type="button" class="btn btn-success btn-icon-split" id="send-account-creation-btn">
+                    <span class="text">Kirim Email Pembuatan Akun</span>
+                </button>
+                <div id="account-creation-info" class="mt-3"></div>
+                <script>
+                document.getElementById('send-account-creation-btn').addEventListener('click', function() {
+                    if (!confirm('Yakin ingin mengirim email pembuatan akun? Ini akan mengaktifkan akun dan mengirim email ke user.')) return;
+                    var btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="text">Mengirim...</span>';
+                    fetch('<?= base_url('admin/users/send-account-creation-ajax/' . $user['id']) ?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '<?= csrf_hash() ?>'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        var infoDiv = document.getElementById('account-creation-info');
+                        if (data.success) {
+                            infoDiv.innerHTML = '<div class="alert alert-success">' + data.message + '<br>Email: ' + data.email + '<br>Waktu: ' + data.sent_at + '</div>';
+                        } else {
+                            infoDiv.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="text">Kirim Email Pembuatan Akun</span>';
+                    })
+                    .catch(err => {
+                        document.getElementById('account-creation-info').innerHTML = '<div class="alert alert-danger">Terjadi kesalahan saat mengirim permintaan.</div>';
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="text">Kirim Email Pembuatan Akun</span>';
+                    });
+                });
+                </script>
             </div>
         </div>
     </div>

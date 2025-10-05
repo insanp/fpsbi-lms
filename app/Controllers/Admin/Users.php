@@ -420,4 +420,51 @@ class Users extends BaseController
       'failedUsers' => isset($failedUsers) ? $failedUsers : []
     ]);
   }
+
+  // AJAX endpoint: Send account creation email and activate user
+  public function sendAccountCreationAjax($id)
+  {
+    if (!$this->request->isAJAX()) {
+      return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request.']);
+    }
+    $userModel = new UserModel();
+    $user = $userModel->find($id);
+    if (!$user) {
+      return $this->response->setJSON(['success' => false, 'message' => 'User tidak ditemukan.']);
+    }
+    // Activate user
+    $userModel->update($id, ['is_active' => 1]);
+
+    // Create a secure token for account creation (3 days = 4320 minutes)
+    $tokenData = \App\Models\PasswordResetModel::createNewRequest($user['id'], 4320);
+
+    // Send account creation email (reuse reset_password template)
+    $emailService = \Config\Services::email();
+    $data = [
+      'member_id' => $user['member_id'],
+      'name' => $user['name'],
+      'email' => $user['email'],
+      'link' => base_url("auth/reset-password/{$tokenData['token']}")
+    ];
+    $htmlData = view('emails/account_creation', ['data' => $data]);
+    $emailService->setTo($user['email']);
+    $emailService->setSubject('LMS FPSB Indonesia - Akun Anda Telah Dibuat');
+    $emailService->setMessage($htmlData);
+    $emailService->setMailType('html');
+    $success = $emailService->send();
+
+    if ($success) {
+      $msg = 'Email pembuatan akun telah dikirim dan akun diaktifkan.';
+    } else {
+      $msg = 'Gagal mengirim email. Silakan cek konfigurasi email.';
+    }
+    return $this->response->setJSON([
+      'success' => $success,
+      'message' => $msg,
+      'user_id' => $user['id'],
+      'email' => $user['email'],
+      'name' => $user['name'],
+      'sent_at' => date('Y-m-d H:i:s')
+    ]);
+  }
 }

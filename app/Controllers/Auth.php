@@ -134,19 +134,10 @@ class Auth extends BaseController
                 // User exists but is not active
                 return redirect()->to('/auth/login-form')->with('message', 'Akun Anda tidak aktif. Harap hubungi admin untuk mengaktifkan akun Anda.');
             }
-            // Generate a secure token
-            $token = bin2hex(random_bytes(32));
-            $expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));
-            $resetModel = new \App\Models\PasswordResetModel();
-            $resetModel->insert([
-                'user_id' => $user['id'],
-                'token' => $token,
-                'expires_at' => $expires,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-
+            // Create a secure token and insert request (5 minutes expiry)
+            $tokenData = \App\Models\PasswordResetModel::createNewRequest($user['id'], 5);
             // Send email with user name
-            $this->sendResetEmail($user['email'], $token, $user['member_id'], $user['name']);
+            $this->sendResetEmail($user['email'], $tokenData['token'], $user['member_id'], $user['name']);
         }
         // Always show the same message for security
         return redirect()->to('/auth/login-form')->with('message', 'Jika email terdaftar, link reset password telah dikirim.');

@@ -67,6 +67,7 @@ $routes->group('admin/users', ['namespace' => '\App\Controllers\Admin'], functio
     $routes->get('(:segment)', 'Users::show/$1');
     $routes->get('(:segment)/edit', 'Users::edit/$1');
     $routes->post('update', 'Users::update');
+    $routes->post('send-account-creation-ajax/(:segment)', 'Users::sendAccountCreationAjax/$1');
 });
 
 $routes->group('admin/course-enrollments', ['namespace' => '\App\Controllers\Admin'], function ($routes) {

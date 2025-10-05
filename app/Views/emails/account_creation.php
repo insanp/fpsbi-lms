@@ -135,7 +135,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:10px;padding-top:10px;width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div class="alignment" align="center">
-                                                                    <div style="max-width: 105px;"><a href="<?= base_url() ?>" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia.png') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="105" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
+                                                                    <div style="max-width: 105px;"><a href="<?= base_url() ?>" target="_blank"><img src="<?= base_url('assets/images/logo_fpsb_indonesia.webp') ?>" style="display: block; height: auto; border: 0; width: 100%;" width="105" alt="Logo FPSB Indonesia" title="Logo FPSB Indonesia" height="auto"></a></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -161,7 +161,7 @@
                                                     <tbody>
                                                         <tr>
                                                             <td class="pad">
-                                                                <h1 style="margin: 0; color: #10305b; direction: ltr; font-family: Playfair Display, Georgia, serif; font-size: 30px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 36px;">Yth. [NAMA],<br></h1>
+                                                                <h1 style="margin: 0; color: #10305b; direction: ltr; font-family: Playfair Display, Georgia, serif; font-size: 30px; font-weight: 700; letter-spacing: normal; line-height: 1.2; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 36px;">Yth. <?= $data['name'] . ' (' . $data['member_id'] . ')' ?>,<br></h1>
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -174,7 +174,7 @@
                                                                     <p style="margin: 0; margin-bottom: 18px;">Akun khusus Anda untuk LMS FPSB Indonesia telah berhasil dibuat.</p>
                                                                     <p style="margin: 0; margin-bottom: 18px;">Demi keamanan, kata sandi tidak dikirimkan melalui email.
                                                                         Silakan gunakan tautan berikut untuk membuat kata sandi pertama Anda:</p>
-                                                                    <p style="margin: 0; margin-bottom: 18px;">🔗 <a href="[LINK]" target="_blank">[LINK]</a></p>
+                                                                    <p style="margin: 0; margin-bottom: 18px;"><a href="<?= $data['link'] ?>" target="_blank"><?= $data['link'] ?></a></p>
                                                                     <p style="margin: 0; margin-bottom: 18px;">Tautan ini hanya berlaku hingga 3 hari sejak email ini dikirimkan. Apabila tautan sudah kedaluwarsa, Anda dapat menghubungi kami kembali.</p>
                                                                     <p style="margin: 0; margin-bottom: 18px;">Jika Anda merasa tidak pernah melakukan pendaftaran, mohon abaikan email ini.</p>
                                                                     <p style="margin: 0; margin-bottom: 18px;">Hormat kami,<br>
