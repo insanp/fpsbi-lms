@@ -43,7 +43,7 @@ class Users extends BaseController
   public function create()
   {
     $userModel = new UserModel();
-    $memberId = '';
+    $memberId = $userModel->generateMemberId();
     $validation_errors = session()->getFlashdata('validation_errors');
     return view('admin/pages/users/create', [
       'memberId' => $memberId,
